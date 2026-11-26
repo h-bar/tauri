@@ -3231,11 +3231,23 @@ impl<T: UserEvent> Runtime<T> for Wry<T> {
   }
 
   fn run<F: FnMut(RunEvent<T>) + 'static>(self, callback: F) {
+    #[cfg(target_env = "ohos")]
+    let window_target = self._window_target;
+    #[cfg(target_env = "ohos")]
+    let mut event_handler = make_event_handler(self.context, callback);
+    #[cfg(target_env = "ohos")]
+    let event_handler = move |event: Event<'_, Message<T>>,
+                              target: &EventLoopWindowTarget<Message<T>>,
+                              control_flow: &mut ControlFlow| {
+      let _keep_alive = &window_target;
+      event_handler(event, target, control_flow)
+    };
+    #[cfg(not(target_env = "ohos"))]
     let event_handler = make_event_handler(self.context, callback);
     self.event_loop.run(event_handler)
   }
 
-  #[cfg(not(target_os = "ios"))]
+  #[cfg(not(any(target_os = "ios", target_env = "ohos")))]
   fn run_return<F: FnMut(RunEvent<T>) + 'static>(mut self, callback: F) -> i32 {
     use tao::platform::run_return::EventLoopExtRunReturn;
 
@@ -3243,7 +3255,7 @@ impl<T: UserEvent> Runtime<T> for Wry<T> {
     self.event_loop.run_return(event_handler)
   }
 
-  #[cfg(target_os = "ios")]
+  #[cfg(any(target_os = "ios", target_env = "ohos"))]
   fn run_return<F: FnMut(RunEvent<T>) + 'static>(self, callback: F) -> i32 {
     self.run(callback);
     0
