@@ -83,6 +83,10 @@ opt-level = "s"
 schemars_derive = { git = 'https://github.com/tauri-apps/schemars.git', branch = 'feat/preserve-description-newlines' }
 tauri = { path = "./crates/tauri" }
 tauri-plugin = { path = "./crates/tauri-plugin" }
+tauri-utils = { path = "./crates/tauri-utils" }
+cargo-mobile2 = { git = "https://github.com/h-bar/cargo-mobile2", branch = "shadow-ohos" }
+wry = { git = "https://github.com/h-bar/wry", branch = "shadow-ohos" }
+tao = { git = "https://github.com/h-bar/tao", branch = "shadow-ohos" }
 
 [workspace.lints.clippy]
 # TODO: Update in next PR to keep changes small, see https://github.com/tauri-apps/tauri/pull/16029

@@ -112,7 +112,7 @@ fn exec(
 
           let cwd = std::env::current_dir().context("failed to resolve current directory")?;
           let task_dir = match target {
-            Target::Android => dirs.tauri.to_path_buf(),
+            Target::Android | Target::OpenHarmony => dirs.tauri.to_path_buf(),
             #[cfg(target_os = "macos")]
             Target::Ios => dirs.tauri.join("gen/apple"),
           };
@@ -143,7 +143,13 @@ fn exec(
     binary.pop();
   }
 
-  map.insert("tauri-binary", binary);
+  // TODO: temp `\ -> /` conversion for ohos
+  map.insert(
+    "tauri-binary",
+    dunce::simplified(std::path::Path::new(&binary))
+      .to_string_lossy()
+      .replace('\\', "/"),
+  );
   map.insert("tauri-binary-args", &build_args);
   map.insert(
     "tauri-binary-args-str",
@@ -191,6 +197,17 @@ fn exec(
         wrapper,
         non_interactive,
         reinstall_deps,
+        skip_targets_install,
+      )?;
+      app
+    }
+    Target::OpenHarmony => {
+      let (config, _metadata) =
+        super::open_harmony::get_config(&app, &tauri_config, &[], &Default::default());
+      super::open_harmony::project::generate(
+        &app,
+        &config,
+        (handlebars, map),
         skip_targets_install,
       )?;
       app

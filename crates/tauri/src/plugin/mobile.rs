@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: MIT
 
 pub use super::mobile_response::{ErrorResponse, PluginInvokeError};
+#[cfg(any(target_os = "ios", target_os = "android"))]
+use super::mobile_response::{PendingCallGuard, complete_pending_call};
 use super::{
   PluginApi, PluginHandle,
-  mobile_response::{
-    PendingCallGuard, PluginResponse, complete_pending_call, parse_plugin_response,
-  },
+  mobile_response::{PluginResponse, parse_plugin_response},
 };
 
 use crate::{AppHandle, Runtime, Webview, ipc::Channel};
@@ -250,6 +250,8 @@ impl<R: Runtime> PluginHandle<R> {
     command: impl AsRef<str>,
     payload: impl Serialize,
   ) -> Result<T, PluginInvokeError> {
+    #[cfg(target_env = "ohos")]
+    ohos::ensure_worker_thread()?;
     let (tx, rx) = channel();
     run_command(
       self.name,
@@ -265,6 +267,39 @@ impl<R: Runtime> PluginHandle<R> {
 
     parse_plugin_response(rx.recv().unwrap())
   }
+}
+
+#[cfg(target_env = "ohos")]
+mod ohos;
+#[cfg(target_env = "ohos")]
+#[doc(hidden)]
+pub use ohos::{
+  close_ohos_plugin_bridge, initialize_ohos_plugin_bridge, ohos_plugin_directory,
+  ohos_plugin_response,
+};
+
+#[cfg(target_env = "ohos")]
+impl<R: Runtime, C: DeserializeOwned> PluginApi<R, C> {
+  /// Registers a native plugin served by the Ability's ArkTS dispatcher.
+  pub fn register_ohos_plugin(&self) -> Result<PluginHandle<R>, PluginInvokeError> {
+    ohos::register_app(&self.handle)?;
+    Ok(PluginHandle {
+      name: self.name,
+      handle: self.handle.clone(),
+    })
+  }
+}
+
+#[cfg(target_env = "ohos")]
+pub(crate) fn run_command<R: Runtime, C: AsRef<str>, F: FnOnce(PluginResponse) + Send + 'static>(
+  name: &str,
+  _handle: &AppHandle<R>,
+  _origin: Option<&Webview<R>>,
+  command: C,
+  payload: serde_json::Value,
+  handler: F,
+) -> Result<(), PluginInvokeError> {
+  ohos::invoke(_handle, name, command.as_ref(), payload, Box::new(handler))
 }
 
 #[cfg(target_os = "ios")]
@@ -504,6 +539,8 @@ impl<R: Runtime> PluginHandle<R> {
     command: impl AsRef<str>,
     payload: impl Serialize,
   ) -> Result<T, PluginInvokeError> {
+    #[cfg(target_env = "ohos")]
+    ohos::ensure_worker_thread()?;
     let (tx, rx) = channel();
     run_command(
       self.name,

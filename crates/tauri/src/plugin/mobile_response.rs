@@ -12,7 +12,7 @@ use std::{
 
 pub(super) type PluginResponse = Result<serde_json::Value, serde_json::Value>;
 
-type PendingPluginCallHandler = Box<dyn FnOnce(PluginResponse) + Send + 'static>;
+pub(super) type PendingPluginCallHandler = Box<dyn FnOnce(PluginResponse) + Send + 'static>;
 
 pub(super) static PENDING_PLUGIN_CALLS_ID: AtomicI32 = AtomicI32::new(0);
 pub(super) static PENDING_PLUGIN_CALLS: OnceLock<Mutex<HashMap<i32, PendingPluginCallHandler>>> =

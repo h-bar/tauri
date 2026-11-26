@@ -363,7 +363,12 @@ pub fn context_codegen(data: ContextData) -> EmbeddedAssetsResult<TokenStream> {
         );
       }
 
-      let schema = options.isolation_schema;
+      // TODO: OpenHarmony cannot register schemes dynamically, so we hardcode the schema
+      let schema = if let Target::OpenHarmony = target {
+        "isolation".to_string()
+      } else {
+        options.isolation_schema.clone()
+      };
 
       quote!(#root::Pattern::Isolation {
         assets: ::std::sync::Arc::new(#assets),

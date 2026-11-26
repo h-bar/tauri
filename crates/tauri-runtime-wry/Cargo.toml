@@ -37,7 +37,7 @@ features = [
   "Win32_UI_WindowsAndMessaging",
 ]
 
-[target."cfg(any(target_os = \"linux\", target_os = \"dragonfly\", target_os = \"freebsd\", target_os = \"openbsd\", target_os = \"netbsd\"))".dependencies]
+[target.'cfg(all(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"), not(target_env = "ohos")))'.dependencies]
 gtk = { version = "0.19", features = ["v3_24"] }
 webkit2gtk = { version = "3", features = ["v2_40"] }
 percent-encoding = "2"

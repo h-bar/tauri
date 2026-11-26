@@ -53,6 +53,7 @@ pub mod android;
 mod init;
 #[cfg(target_os = "macos")]
 pub mod ios;
+pub mod open_harmony;
 
 const MIN_DEVICE_MATCH_SCORE: isize = 0;
 
@@ -92,6 +93,7 @@ pub enum Target {
   Android,
   #[cfg(target_os = "macos")]
   Ios,
+  OpenHarmony,
 }
 
 impl Target {
@@ -100,6 +102,7 @@ impl Target {
       Self::Android => "Android Studio",
       #[cfg(target_os = "macos")]
       Self::Ios => "Xcode",
+      Self::OpenHarmony => "Dev-Eco Studio",
     }
   }
 
@@ -108,6 +111,7 @@ impl Target {
       Self::Android => "android",
       #[cfg(target_os = "macos")]
       Self::Ios => "ios",
+      Self::OpenHarmony => "ohos",
     }
   }
 
@@ -116,6 +120,7 @@ impl Target {
       Self::Android => "android-studio-script",
       #[cfg(target_os = "macos")]
       Self::Ios => "xcode-script",
+      Self::OpenHarmony => "dev-eco-studio-script",
     }
   }
 
@@ -124,6 +129,7 @@ impl Target {
       Self::Android => tauri_utils::platform::Target::Android,
       #[cfg(target_os = "macos")]
       Self::Ios => tauri_utils::platform::Target::Ios,
+      Self::OpenHarmony => tauri_utils::platform::Target::OpenHarmony,
     }
   }
 }
@@ -322,6 +328,7 @@ fn env_vars() -> HashMap<String, OsString> {
       || k.starts_with("WRY")
       || k.starts_with("CARGO_")
       || k.starts_with("RUST_")
+      || k.starts_with("OHOS")
       || k == "TMPDIR"
       || k == "PATH"
     {
@@ -393,6 +400,7 @@ fn options_server_file(target: Target, tauri_dir: &Path) -> PathBuf {
     Target::Android => "android",
     #[cfg(target_os = "macos")]
     Target::Ios => "apple",
+    Target::OpenHarmony => "ohos",
   };
   tauri_dir
     .join("gen")
@@ -606,6 +614,7 @@ pub fn get_app(
     Target::Android => config.identifier.replace('-', "_"),
     #[cfg(target_os = "macos")]
     Target::Ios => config.identifier.replace('_', "-"),
+    Target::OpenHarmony => config.identifier.replace('-', "_"),
   };
 
   if identifier.is_empty() {
@@ -756,6 +765,18 @@ fn ensure_init(
       }
 
       // note: pbxproj is synchronied by the dev/build commands
+    }
+    Target::OpenHarmony => {
+      let path = project_dir.join("AppScope").join("app.json5");
+      let app_json = json5::from_str::<open_harmony::AppConfig>(
+        &read_to_string(&path)
+          .context("missing app.json5 file in the OpenHarmony project directory")?,
+      )
+      .with_context(|| format!("failed to parse config at {} as JSON5", path.display()))?;
+      if app_json.app.bundle_name != tauri_config.identifier.replace('-', "_") {
+        project_outdated_reasons
+          .push("you have modified your \"identifier\" in the Tauri configuration");
+      }
     }
   }
 

@@ -745,12 +745,15 @@ impl<'a, R: Runtime, M: Manager<R>> WebviewWindowBuilder<'a, R, M> {
   /// Sets the window to be created transient for parent.
   ///
   /// See <https://docs.gtk.org/gtk3/method.Window.set_transient_for.html>
-  #[cfg(any(
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
+  #[cfg(all(
+    any(
+      target_os = "linux",
+      target_os = "dragonfly",
+      target_os = "freebsd",
+      target_os = "netbsd",
+      target_os = "openbsd",
+    ),
+    not(target_env = "ohos")
   ))]
   pub fn transient_for(mut self, parent: &WebviewWindow<R>) -> crate::Result<Self> {
     self.window_builder = self.window_builder.transient_for(&parent.window)?;
@@ -760,12 +763,15 @@ impl<'a, R: Runtime, M: Manager<R>> WebviewWindowBuilder<'a, R, M> {
   /// Sets the window to be created transient for parent.
   ///
   /// See <https://docs.gtk.org/gtk3/method.Window.set_transient_for.html>
-  #[cfg(any(
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
+  #[cfg(all(
+    any(
+      target_os = "linux",
+      target_os = "dragonfly",
+      target_os = "freebsd",
+      target_os = "netbsd",
+      target_os = "openbsd",
+    ),
+    not(target_env = "ohos")
   ))]
   #[must_use]
   pub fn transient_for_raw(mut self, parent: &impl gtk::prelude::IsA<gtk::Window>) -> Self {
@@ -1486,7 +1492,8 @@ impl<R: Runtime, M: Manager<R>> WebviewWindowBuilder<'_, R, M> {
       target_os = "freebsd",
       target_os = "netbsd",
       target_os = "openbsd",
-    )
+    ),
+    not(target_env = "ohos")
   ))]
   pub fn with_related_view(mut self, related_view: webkit2gtk::WebView) -> Self {
     self.webview_builder = self.webview_builder.with_related_view(related_view);
@@ -1508,14 +1515,17 @@ impl<R: Runtime, M: Manager<R>> WebviewWindowBuilder<'_, R, M> {
 
   /// Set the window features.
   /// Useful if you need to share the same window features, for instance when using the [`Self::on_new_window`].
-  #[cfg(any(
-    target_os = "macos",
-    windows,
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
+  #[cfg(all(
+    any(
+      target_os = "macos",
+      windows,
+      target_os = "linux",
+      target_os = "dragonfly",
+      target_os = "freebsd",
+      target_os = "netbsd",
+      target_os = "openbsd",
+    ),
+    not(target_env = "ohos")
   ))]
   pub fn window_features(mut self, features: NewWindowFeatures) -> Self {
     if let Some(position) = features.position() {
@@ -1548,7 +1558,8 @@ impl<R: Runtime, M: Manager<R>> WebviewWindowBuilder<'_, R, M> {
         target_os = "freebsd",
         target_os = "netbsd",
         target_os = "openbsd",
-      )
+      ),
+      not(target_env = "ohos")
     ))]
     {
       self.webview_builder = self
@@ -2009,12 +2020,15 @@ impl<R: Runtime> WebviewWindow<R> {
   /// Returns the `ApplicationWindow` from gtk crate that is used by this window.
   ///
   /// Note that this type can only be used on the main thread.
-  #[cfg(any(
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
+  #[cfg(all(
+    any(
+      target_os = "linux",
+      target_os = "dragonfly",
+      target_os = "freebsd",
+      target_os = "netbsd",
+      target_os = "openbsd",
+    ),
+    not(target_env = "ohos")
   ))]
   pub fn gtk_window(&self) -> crate::Result<gtk::ApplicationWindow> {
     self.window.gtk_window()
@@ -2023,12 +2037,15 @@ impl<R: Runtime> WebviewWindow<R> {
   /// Returns the vertical [`gtk::Box`] that is added by default as the sole child of this window.
   ///
   /// Note that this type can only be used on the main thread.
-  #[cfg(any(
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
+  #[cfg(all(
+    any(
+      target_os = "linux",
+      target_os = "dragonfly",
+      target_os = "freebsd",
+      target_os = "netbsd",
+      target_os = "openbsd",
+    ),
+    not(target_env = "ohos")
   ))]
   pub fn default_vbox(&self) -> crate::Result<gtk::Box> {
     self.window.default_vbox()
@@ -2493,7 +2510,7 @@ impl<R: Runtime> WebviewWindow<R> {
   ///     .setup(|app| {
   ///       let main_webview = app.get_webview_window("main").unwrap();
   ///       main_webview.with_webview(|webview| {
-  ///         #[cfg(target_os = "linux")]
+  ///         #[cfg(all(target_os = "linux", not(target_env = "ohos")))]
   ///         {
   ///           // see <https://docs.rs/webkit2gtk/2.0.0/webkit2gtk/struct.WebView.html>
   ///           // and <https://docs.rs/webkit2gtk/2.0.0/webkit2gtk/trait.WebViewExt.html>
